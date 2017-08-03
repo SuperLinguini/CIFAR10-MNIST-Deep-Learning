@@ -7,6 +7,10 @@ num_channels = 3
 img_size = 32
 num_output = 10
 
+X_train = None
+y_train = None
+X_test = None
+y_test = None
 
 def read_pickle(filename):
     with open(filename, 'rb') as f:
@@ -71,8 +75,12 @@ def get_test_data():
 
     return X_test, y_test
 
-def get_batch(batch_size=100):
+def load_train_test_data():
+    global X_train, y_train, X_test, y_test
     X_train, y_train = get_training_data()
+    X_test, y_test = get_test_data()
+
+def get_batch(batch_size=100):
     X = tf.stack(X_train)
     y = tf.stack(y_train)
     image_batch, label_batch = tf.train.shuffle_batch([X, y], num_threads=4, capacity=50000, min_after_dequeue=10000,

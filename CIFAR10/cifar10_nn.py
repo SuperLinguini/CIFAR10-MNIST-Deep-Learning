@@ -1,5 +1,6 @@
 import tensorflow as tf
 import math
+from numpy.random import choice
 
 from CIFAR10 import cifar10
 
@@ -10,9 +11,9 @@ Y_ = tf.placeholder(tf.float32, [None, cifar10.num_output])
 learning_rate = tf.placeholder(tf.float32)
 pkeep = tf.placeholder(tf.float32)
 
-K = 4
-L = 8
-M = 12
+K = 6
+L = 12
+M = 24
 N = 200
 
 def conv2d(X_input, filter_size, stride, in_channels, out_channels):
@@ -37,8 +38,8 @@ def softmax_layer(X_input, in_dim, out_dim):
 stride1 = 1
 stride2 = 2
 
-Y1 = conv2d(X, 5, stride1, cifar10.num_channels, K)
-Y2 = conv2d(Y1, 4, stride2, K, L)
+Y1 = conv2d(X, 6, stride1, cifar10.num_channels, K)
+Y2 = conv2d(Y1, 5, stride2, K, L)
 Y3 = conv2d(Y2, 4, stride2, L, M)
 
 YY = tf.reshape(Y3, shape=[-1, 8 * 8 * M])
@@ -57,39 +58,42 @@ train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
 
 init = tf.global_variables_initializer()
 sess = tf.Session()
+sess.run(tf.local_variables_initializer())
 sess.run(init)
 
-for i in range(10000):
-    batch_X, batch_Y = cifar10.get_batch(100)
+cifar10.load_train_test_data()
+
+for i in range(100000):
+    rand_ints = choice(50000, 100)
+    batch_X = cifar10.X_train[rand_ints, :, :, :]
+    batch_Y = cifar10.y_train[rand_ints, :]
+    # batch_X, batch_Y = cifar10.get_batch(100)
 
     max_learning_rate = .003
     min_learning_rate = .0001
     decay_speed = 2000.0
     lr = min_learning_rate + (max_learning_rate - min_learning_rate) * math.exp(-i/decay_speed)
 
-    print(type(batch_X), type(batch_Y))
-    print(batch_X.shape, batch_Y.shape)
-    print(i)
+    # print(type(batch_X), type(batch_Y))
+    # print(batch_X.shape, batch_Y.shape)
+    # print(i)
 
     # batch_X = batch_X.eval(session=sess)
     # batch_Y = batch_Y.eval(session=sess)
 
-    coord = tf.train.Coordinator()
-    # wake up the threads
-    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-
-    batch_X, batch_Y = sess.run([batch_X, batch_Y])
-
-    # When done, ask the threads to stop.
-    coord.request_stop()
-    # Wait for threads to finish.
-    coord.join(threads)
+    # coord = tf.train.Coordinator()
+    # # wake up the threads
+    # threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+    #
+    # batch_X, batch_Y = sess.run([batch_X, batch_Y])
+    #
+    # # When done, ask the threads to stop.
+    # coord.request_stop()
+    # # Wait for threads to finish.
+    # coord.join(threads)
 
 
     train_data = {X: batch_X, Y_: batch_Y, learning_rate: lr, pkeep: 0.75}
-
-
-    print(type(batch_X), type(batch_Y))
 
     sess.run(train_step, feed_dict=train_data)
 
@@ -97,7 +101,8 @@ for i in range(10000):
         a, c = sess.run([accuracy, cross_entropy], feed_dict=train_data)
         print('Iteration {}:'.format(i))
         print('Train: {} {}'.format(a, c))
-        images, labels = cifar10.get_test_data()
+        images = cifar10.X_test
+        labels = cifar10.y_test
         test_data = {X: images, Y_: labels, learning_rate: lr, pkeep: 1.0}
         a, c = sess.run([accuracy, cross_entropy], feed_dict=test_data)
         print('Test: {} {}'.format(a, c))
