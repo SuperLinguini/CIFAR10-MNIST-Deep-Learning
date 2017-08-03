@@ -76,6 +76,6 @@ for i in range(10000):
         a, c = sess.run([accuracy, cross_entropy], feed_dict=train_data)
         print('Iteration {}:'.format(i))
         print('Train: {} {}'.format(a, c))
-        test_data = {X: mnist.test.images, Y_: mnist.test.labels, learning_rate: lr, pkeep: 0.75}
+        test_data = {X: mnist.test.images, Y_: mnist.test.labels, learning_rate: lr, pkeep: 1.0}
         a, c = sess.run([accuracy, cross_entropy], feed_dict=test_data)
         print('Test: {} {}'.format(a, c))
